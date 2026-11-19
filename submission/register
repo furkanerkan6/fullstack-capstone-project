@@ -1,0 +1,2 @@
+$ curl -s -X POST http://localhost:3060/api/auth/register -H 'Content-Type: application/json' -d '{"firstName":"Demo","lastName":"User","email":"demo.user@example.com","password":"demo1234"}'
+{"authtoken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNmFmZjNlNjkwZjZmNmRlYjYxNzQ0M2JkIn0sImlhdCI6MTc5NTExMjU1M30.9ucZr5cDV80KS3Xk88rwY8LSg10Pd1OGylnVCfeEGH0","email":"demo.user@example.com"}

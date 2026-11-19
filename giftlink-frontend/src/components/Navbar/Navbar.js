@@ -35,13 +35,13 @@ export default function Navbar() {
 
     return (
         <nav className="navbar navbar-expand navbar-light bg-light px-3 flex-wrap" id="navbar_container">
-            <a className="navbar-brand" href="/">GiftLink</a>
+            <a className="navbar-brand" href={`${process.env.PUBLIC_URL}/home.html`}>GiftLink</a>
 
             <div className="collapse navbar-collapse flex-wrap" id="navbarNav">
                 <ul className="navbar-nav">
                     {/* Task 1: Add links to Home and Gifts below*/}
                     <li className="nav-item">
-                        <a className="nav-link" href="/home.html">Home</a>
+                        <a className="nav-link" href={`${process.env.PUBLIC_URL}/home.html`}>Home</a>
                     </li>
                     <li className="nav-item">
                         <Link className="nav-link" to="/app">Gifts</Link>

@@ -1,0 +1,175 @@
+name: 'CI/CD'
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint_js:
+    name: Lint JavaScript Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install JSHint
+        run: npm install --global jshint@2.13.6
+
+      - name: Run Linter
+        run: |
+          jshint giftlink-backend/app.js giftlink-backend/logger.js giftlink-backend/models giftlink-backend/routes
+          jshint sentiment/index.js sentiment/logger.js
+          echo "Linted all the JavaScript files successfully"
+
+  backend_test:
+    name: Test Backend APIs
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    env:
+      MONGO_URL: mongodb://localhost:27017
+      JWT_SECRET: ci-test-secret
+    defaults:
+      run:
+        working-directory: giftlink-backend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          npm ci
+          cd util/import-mongo && npm ci
+
+      - name: Import Gift Data into MongoDB
+        run: node util/import-mongo/index.js
+
+      - name: Start Backend Server
+        run: |
+          nohup node app.js > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -s http://localhost:3060/ && break; sleep 1; done
+
+      - name: Test API Endpoints
+        run: |
+          set -e
+          count=$(curl -s http://localhost:3060/api/gifts | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).length))")
+          echo "GET /api/gifts returned $count gifts"
+          test "$count" = "16"
+          curl -sf http://localhost:3060/api/gifts/875 | grep -q '"name":"Lamp"'
+          echo "GET /api/gifts/:id works"
+          curl -sf "http://localhost:3060/api/search?category=Office" | grep -q '"category":"Office"'
+          echo "GET /api/search works"
+          curl -sf -X POST http://localhost:3060/api/auth/register -H 'Content-Type: application/json' \
+            -d '{"firstName":"CI","lastName":"User","email":"ci@example.com","password":"ci123456"}' | grep -q authtoken
+          echo "POST /api/auth/register works"
+          curl -sf -X POST http://localhost:3060/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"email":"ci@example.com","password":"ci123456"}' | grep -q authtoken
+          echo "POST /api/auth/login works"
+
+      - name: Show Server Log
+        if: always()
+        run: cat server.log
+
+  client_build:
+    name: Build Client
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Client Build
+        run: |
+          cd giftlink-frontend
+          npm ci
+          CI=true npm run build
+          echo "Client-side build successfully"
+
+  docker_build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Backend Image
+        run: docker build -t giftlink-backend ./giftlink-backend
+
+      - name: Build Sentiment Image
+        run: docker build -t giftlink-sentiment ./sentiment
+
+      - name: Build Frontend Image
+        run: docker build -t giftlink-frontend ./giftlink-frontend
+
+      - name: List Images
+        run: docker images | grep giftlink
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [lint_js, backend_test, client_build, docker_build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Site
+        env:
+          PUBLIC_URL: /${{ github.event.repository.name }}
+          REACT_APP_BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          cd giftlink-frontend
+          npm ci
+          CI=true npm run build
+          # Landing page at the root, React app under /app, SPA fallback for deep links
+          mkdir -p build/app
+          cp build/index.html build/app/index.html
+          cp build/index.html build/404.html
+          cp build/home.html build/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: giftlink-frontend/build
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

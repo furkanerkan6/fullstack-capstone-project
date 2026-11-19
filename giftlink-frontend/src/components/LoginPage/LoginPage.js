@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { urlConfig } from '../../config';
 import { useAppContext } from '../../context/AuthContext';
 import './LoginPage.css';
@@ -107,7 +107,7 @@ function LoginPage() {
                         <button type="submit" className="btn btn-primary w-100 mb-3">Login</button>
 
                         <p className="mt-4 text-center">
-                            New here? <a href="/app/register" className="text-primary">Register Here</a>
+                            New here? <Link to="/app/register" className="text-primary">Register Here</Link>
                         </p>
                     </form>
                 </div>

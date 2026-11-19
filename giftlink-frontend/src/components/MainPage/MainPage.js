@@ -55,7 +55,7 @@ function MainPage() {
                             {/* // Write your code below this line */}
                             <div className="image-placeholder">
                                 {gift.image ? (
-                                    <img src={gift.image} alt={gift.name} />
+                                    <img src={`${process.env.PUBLIC_URL}${gift.image}`} alt={gift.name} />
                                 ) : (
                                     <div className="no-image-available">No Image Available</div>
                                 )}

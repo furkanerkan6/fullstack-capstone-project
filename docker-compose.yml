@@ -1,0 +1,36 @@
+# Run the whole GiftLink stack locally: docker compose up --build
+services:
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build: ./giftlink-backend
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+    ports:
+      - "3060:3060"
+    depends_on:
+      - mongodb
+
+  sentiment:
+    build: ./sentiment
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./giftlink-frontend
+      args:
+        - REACT_APP_BACKEND_URL=http://localhost:3060
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

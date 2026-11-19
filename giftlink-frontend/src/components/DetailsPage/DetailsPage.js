@@ -87,7 +87,7 @@ return (
                     <div className="image-placeholder-large">
                         {gift.image ? (
 			// Task 5: Display gift image
-			<img src={gift.image} alt={gift.name} className="product-image-large" />
+			<img src={`${process.env.PUBLIC_URL}${gift.image}`} alt={gift.name} className="product-image-large" />
                         ) : (
                             <div className="no-image-available-large">No Image Available</div>
                         )}
