@@ -1,19 +1,69 @@
 /* Task 1: Style the body */
 body {
-    /* insert code here */
+    font-family: 'Montserrat', sans-serif;
+    color: #ffffff;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow-x: hidden;
 }
 
 /* Task 2: Create a pseudo-element for the background and blur */
 body::before {
-    /* insert code here */
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: url('/static/background-gifts.jpg') no-repeat center center / cover;
+    filter: blur(6px) brightness(0.55);
+    transform: scale(1.05);
+    z-index: -1;
 }
 
 /* Task 3: Style the content area */
 .content {
-    /* insert code here */
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 16px;
+    padding: 48px 32px;
+    max-width: 720px;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 /* Task 4: Add styles for headings, paragraphs, and buttons */
 h1, h2, .lead, .btn-primary {
-    /* insert code here */
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+h2 {
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+}
+
+.lead {
+    font-style: italic;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    font-weight: 700;
+    padding: 12px 36px;
+    border-radius: 30px;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #009688;
+    border-color: #009688;
 }
